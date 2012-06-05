@@ -1,15 +1,6 @@
-<div class="post">
-    <div class="post-heading">
-        <a href="{{l.link}}" class="post-title" target="_blank">
+<div class="entry">
+        <a href="{{l.link}}" class="link-title" target="_blank">
             {{l.title}}
         </a>
-
-        <div class="post-date">
-            {{l.created.strftime("%b %d, %Y")}}
-        </div>
+        <span class="link-date">{{l.created.strftime("%b %d, %Y")}}</span>
     </div>
-
-    <div class="post-content">
-        {{l._render_text | safe}}
-    </div>
-</div>
