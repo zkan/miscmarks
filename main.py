@@ -32,7 +32,7 @@ def check_secure_val(secure_val):
     if secure_val == make_secure_val(val):
         return val
 
-class MarkHandler(webapp2.RequestHandler):
+class LinkHandler(webapp2.RequestHandler):
     def write(self, *a, **kw):
         self.response.out.write(*a, **kw)
 
@@ -74,10 +74,6 @@ class MarkHandler(webapp2.RequestHandler):
             self.format = 'json'
         else:
             self.format = 'html'
-
-class MainPage(MarkHandler):
-  def get(self):
-      self.write('Hello, Udacity!')
 
 
 ##### user stuff
@@ -129,19 +125,19 @@ class User(db.Model):
 
 ##### mark stuff
 
-def mark_key(name = 'default'):
-    return db.Key.from_path('marks', name)
+def link_key(name = 'default'):
+    return db.Key.from_path('links', name)
 
-class Mark(db.Model):
+class Link(db.Model):
     title = db.StringProperty(required = True)
     link = db.TextProperty(required = True)
-    desc = db.TextProperty(required = False)
+    description = db.TextProperty()
     created = db.DateTimeProperty(auto_now_add = True)
     last_modified = db.DateTimeProperty(auto_now = True)
 
     def render(self):
-        self._render_text = self.content.replace('\n', '<br>')
-        return render_str("mark.html", p = self)
+        self._render_text = self.description.replace('\n', '<br>')
+        return render_str("link.html", l = self)
 
     def as_dict(self):
         time_fmt = '%c'
@@ -152,51 +148,63 @@ class Mark(db.Model):
              'last_modified': self.last_modified.strftime(time_fmt)}
         return d
 
+class MainPage(LinkHandler):
+  def get(self):
+      links = Link.all().order('-created')
+      if self.format == 'html':
+          self.render('main-page.html', links = links)
+      else:
+          return self.render_json([l.as_dict() for l in links])
 
+#class Front(LinkHandler):
+#    def get(self):
+#        links = Link.all().order('-created')
+#        if self.format == 'html':
+#            self.render('front.html', links = links)
+#        else:
+#            return self.render_json([m.as_dict() for m in marks])
 
-class MarkFront(MarkHandler):
-    def get(self):
-        marks = greetings = Mark.all().order('-created')
-        if self.format == 'html':
-            self.render('front.html', marks = marks)
-        else:
-            return self.render_json([m.as_dict() for m in marks])
+#class LinkPage(LinkHandler):
+#    def get(self, post_id):
+#        key = db.Key.from_path('Post', int(post_id), parent=blog_key())
+#        post = db.get(key)
+#
+#        if not post:
+#            self.error(404)
+#            return
+#        if self.format == 'html':
+#            self.render("permalink.html", post = post)
+#        else:
+#            self.render_json(post.as_dict())
 
-class PostPage(MarkHandler):
-    def get(self, post_id):
-        key = db.Key.from_path('Post', int(post_id), parent=blog_key())
-        post = db.get(key)
-
-        if not post:
-            self.error(404)
-            return
-        if self.format == 'html':
-            self.render("permalink.html", post = post)
-        else:
-            self.render_json(post.as_dict())
-
-class NewPost(MarkHandler):
+class NewLink(LinkHandler):
     def get(self):
         if self.user:
-            self.render("newpost.html")
+            self.render("newlink.html")
         else:
             self.redirect("/login")
 
     def post(self):
         if not self.user:
-            self.redirect('/blog')
+            self.redirect('/')
 
-        subject = self.request.get('subject')
-        content = self.request.get('content')
+        title = self.request.get('title')
+        link = self.request.get('link')
+        description = self.request.get('description')
 
-        if subject and content:
-            p = Post(parent = blog_key(), subject = subject, content = content)
-            p.put()
-            self.redirect('/blog/%s' % str(p.key().id()))
+        if title and link:
+            l = Link(parent = link_key(), 
+                     title = title, 
+                     link = link, 
+                     description = description)
+            l.put()
+            self.redirect('/%s' % str(l.key().id()))
         else:
-            error = "subject and content, please!"
-            self.render("newpost.html", subject=subject, content=content, error=error)
-
+            error = "title and link, please!"
+            self.render("newlink.html", title = title, 
+                                        link = link, 
+                                        description = description, 
+                                        error = error)
 
 USER_RE = re.compile(r"^[a-zA-Z0-9_-]{3,20}$")
 def valid_username(username):
@@ -210,7 +218,7 @@ EMAIL_RE  = re.compile(r'^[\S]+@[\S]+\.[\S]+$')
 def valid_email(email):
     return not email or EMAIL_RE.match(email)
 
-class Signup(MarkHandler):
+class Signup(LinkHandler):
     def get(self):
         self.render("signup-form.html")
 
@@ -265,7 +273,7 @@ class Register(Signup):
             self.login(u)
             self.redirect('/unit3/welcome')
 
-class Login(MarkHandler):
+class Login(LinkHandler):
     def get(self):
         self.render('login-form.html')
 
@@ -281,7 +289,7 @@ class Login(MarkHandler):
             msg = 'Invalid login'
             self.render('login-form.html', error = msg)
 
-class Logout(MarkHandler):
+class Logout(LinkHandler):
     def get(self):
         self.logout()
         self.redirect('/signup')
@@ -293,7 +301,7 @@ class Logout(MarkHandler):
 #        else:
 #            self.redirect('/signup')
 
-class Welcome(MarkHandler):
+class Welcome(LinkHandler):
     def get(self):
         username = self.request.get('username')
         if valid_username(username):
@@ -301,10 +309,9 @@ class Welcome(MarkHandler):
         else:
             self.redirect('/unit2/signup')
 
-app = webapp2.WSGIApplication([('/', MainPage),
-                               ('/blog/?(?:.json)?', MarkFront),
-                               ('/blog/([0-9]+)(?:.json)?', PostPage),
-                               ('/blog/newpost', NewPost),
+app = webapp2.WSGIApplication([('/?(?:.json)?', MainPage),
+#                               ('/blog/([0-9]+)(?:.json)?', PostPage),
+                               ('/newlink', NewLink),
                                ('/signup', Register),
                                ('/login', Login),
                                ('/logout', Logout),

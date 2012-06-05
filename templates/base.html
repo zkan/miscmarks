@@ -2,23 +2,23 @@
 <html>
 <head>
     <link type="text/css" rel="stylesheet" href="/static/main.css" />
-    <title>Kan-Udacity Blog</title>
+    <title>MISCmarks | Online Simple Bookmarking</title>
 </head>
 
 <body>
-    <a href="/blog" class="main-title">
-        Kan-Udacity Blog
+    <a href="/" class="main-title">
+        MISCmarks
     </a>
   
     <div class="login-area">
-        <a class="login-link" href="/blog/newpost">newpost</a>
+        <a class="login-link" href="/newlink">submit</a>
         |
         {% if logged_in %}
-        {{username}} (<a class="login-link" href="/blog/logout">logout</a>)
+        {{username}} (<a class="login-link" href="/logout">logout</a>)
         {% else %}
-        <a class="login-link" href="/blog/login">login</a>
+        <a class="login-link" href="/login">login</a>
         |
-        <a class="login-link" href="/blog/signup">signup</a>
+        <a class="login-link" href="/signup">signup</a>
         {% endif %}
     </div>
 
