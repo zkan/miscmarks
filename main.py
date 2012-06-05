@@ -198,7 +198,8 @@ class NewLink(LinkHandler):
                      link = link, 
                      description = description)
             l.put()
-            self.redirect('/%s' % str(l.key().id()))
+#            self.redirect('/%s' % str(l.key().id()))
+            self.redirect('/')
         else:
             error = "title and link, please!"
             self.render("newlink.html", title = title, 
@@ -271,7 +272,7 @@ class Register(Signup):
             u.put()
 
             self.login(u)
-            self.redirect('/unit3/welcome')
+            self.redirect('/')
 
 class Login(LinkHandler):
     def get(self):
@@ -284,15 +285,16 @@ class Login(LinkHandler):
         u = User.login(username, password)
         if u:
             self.login(u)
-            self.redirect('/unit3/welcome')
+            self.redirect('/')
         else:
             msg = 'Invalid login'
-            self.render('login-form.html', error = msg)
+            self.render('login-form.html', username = username, 
+                                           error = msg)
 
 class Logout(LinkHandler):
     def get(self):
         self.logout()
-        self.redirect('/signup')
+        self.redirect('/')
 
 #class Unit3Welcome(BlogHandler):
 #    def get(self):

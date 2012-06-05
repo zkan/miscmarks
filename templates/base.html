@@ -13,8 +13,8 @@
     <div class="login-area">
         <a class="login-link" href="/newlink">submit</a>
         |
-        {% if logged_in %}
-        {{username}} (<a class="login-link" href="/logout">logout</a>)
+        {% if user %}
+        {{user.name}} (<a class="login-link" href="/logout">logout</a>)
         {% else %}
         <a class="login-link" href="/login">login</a>
         |
