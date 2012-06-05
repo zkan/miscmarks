@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+    {% for l in links %}
+        {{ l.render() | safe }}
+        <br><br>
+    {% endfor %}
+
+{% endblock %}
