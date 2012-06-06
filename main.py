@@ -12,6 +12,7 @@ from string import letters
 import webapp2
 import jinja2
 
+from google.appengine.api import memcache
 from google.appengine.ext import db
 
 template_dir = os.path.join(os.path.dirname(__file__), 'templates')
@@ -148,13 +149,25 @@ class Link(db.Model):
              'last_modified': self.last_modified.strftime(time_fmt)}
         return d
 
+def top_links(update = False): 
+    key = 'top'
+    links = memcache.get(key)
+    if links is None or update:
+        logging.error('DB QUERY')
+        links = Link.all().order('-created')
+        links = list(links)
+        memcache.set(key, links)
+    
+    return links
+
 class MainPage(LinkHandler):
-  def get(self):
-      links = Link.all().order('-created')
-      if self.format == 'html':
-          self.render('main-page.html', links = links)
-      else:
-          return self.render_json([l.as_dict() for l in links])
+    def get(self):
+        links = top_links()
+
+        if self.format == 'html':
+            self.render('main-page.html', links = links)
+        else:
+            return self.render_json([l.as_dict() for l in links])
 
 #class Front(LinkHandler):
 #    def get(self):
@@ -198,6 +211,9 @@ class NewLink(LinkHandler):
                      link = link, 
                      description = description)
             l.put()
+            # return the query and update the cache
+            top_links(True)
+            
 #            self.redirect('/%s' % str(l.key().id()))
             self.redirect('/')
         else:
