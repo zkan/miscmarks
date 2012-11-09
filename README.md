@@ -1,9 +1,7 @@
-miscmarks
+MISCmarks
 =========
 
-MISCmarks
-
-MISCmarks is an online simple bookmarking service.
+MISCmarks is a personal online simple bookmarking service.
 
 
 
